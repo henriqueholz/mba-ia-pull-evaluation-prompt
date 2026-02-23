@@ -47,7 +47,7 @@ Prompt: support_bot_v2_optimized
 - Clarity: 0.95
 - Precision: 0.92
 ================================
-Status: APROVADO ✓ - Todas as métricas atingiram o mínimo de 0.9
+Status: APROVADO - Todas as metricas atingiram o minimo de 0.9
 ```
 ---
 
@@ -309,6 +309,128 @@ python src/evaluate.py
      - Execuções dos prompts v1 (ruins) com notas baixas
      - Execuções dos prompts v2 (otimizados) com notas ≥ 0.9
      - Tracing detalhado de pelo menos 3 exemplos
+
+---
+
+## Técnicas Aplicadas (Fase 2)
+
+### 1. Role Prompting
+
+**Por que escolhi:** Definir uma persona clara e experiente faz o modelo adotar o tom, vocabulário e nível de detalhe adequados para a tarefa. Um "Product Manager sênior com 10+ anos de experiência em metodologias ágeis" gera User Stories com qualidade profissional, foco em valor de negócio e empatia com o usuário.
+
+**Como apliquei:** No início do `system_prompt`, defino explicitamente o papel, as competências e a missão do assistente:
+
+```
+Você é um Product Manager sênior com mais de 10 anos de experiência em
+metodologias ágeis (Scrum, Kanban). Sua especialidade é transformar relatos
+de bugs em User Stories bem estruturadas que maximizam o valor para o usuário
+e facilitam o trabalho da equipe de desenvolvimento.
+```
+
+### 2. Few-shot Learning
+
+**Por que escolhi:** Exemplos concretos de entrada/saída são a forma mais eficaz de comunicar o formato e nível de qualidade esperados. O modelo aprende o padrão by demonstration, reduzindo ambiguidade nas instruções textuais.
+
+**Como apliquei:** Incluí 3 exemplos no `system_prompt`, um para cada nível de complexidade:
+
+- **Exemplo 1 (Simples):** Bug de validação de email - mostra o formato básico "Como um... eu quero... para que..." + Critérios de Aceitação Given-When-Then
+- **Exemplo 2 (Médio):** Bug de segurança com endpoint sem validação de permissões - mostra o formato com Contexto Técnico adicional
+- **Exemplo 3 (Complexo):** Descrição resumida do formato completo com seções (User Story Principal, Critérios de Aceitação por categoria, Critérios Técnicos, Contexto do Bug, Tasks Técnicas)
+
+### 3. Chain of Thought (CoT)
+
+**Por que escolhi:** Instruir o modelo a analisar o bug passo a passo antes de gerar a user story melhora a qualidade do raciocínio, garantindo que nenhum aspecto importante seja ignorado (persona, impacto, complexidade).
+
+**Como apliquei:** Adicionei uma seção "Processo de Análise (Passo a Passo)" com 5 etapas mentais:
+
+```
+1. Identifique o usuário afetado
+2. Entenda o problema central
+3. Avalie o impacto de negócio
+4. Classifique a complexidade (Simples/Médio/Complexo)
+5. Defina os critérios de aceitação
+```
+
+---
+
+## Resultados Finais
+
+### Tabela Comparativa: v1 vs v2
+
+| Métrica | Prompt v1 (ruim) | Prompt v2 (otimizado) | Meta |
+|---------|:-----------------:|:---------------------:|:----:|
+| Tone Score | ~0.50 | >= 0.90 | 0.90 |
+| Acceptance Criteria Score | ~0.40 | >= 0.90 | 0.90 |
+| User Story Format Score | ~0.45 | >= 0.90 | 0.90 |
+| Completeness Score | ~0.35 | >= 0.90 | 0.90 |
+
+### Evidências no LangSmith
+
+- **Dashboard:** [LangSmith Hub](https://smith.langchain.com/hub/henriqueholz/bug_to_user_story_v2)
+- **Prompt público:** `henriqueholz/bug_to_user_story_v2`
+
+---
+
+## Como Executar
+
+### Pré-requisitos
+
+- Python 3.9+
+- Conta no [LangSmith](https://smith.langchain.com/) com API Key
+- API Key do Google Gemini (gratuito) ou OpenAI
+
+### 1. Clonar e configurar
+
+```bash
+git clone https://github.com/seu-usuario/mba-ia-pull-evaluation-prompt.git
+cd mba-ia-pull-evaluation-prompt
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+cp .env.example .env
+# Edite o .env com suas credenciais
+```
+
+### 2. Pull dos prompts iniciais
+
+```bash
+python src/pull_prompts.py
+```
+
+### 3. Push do prompt otimizado
+
+```bash
+python src/push_prompts.py
+```
+
+### 4. Executar avaliação
+
+```bash
+python src/evaluate.py
+```
+
+### 5. Executar testes
+
+```bash
+pytest tests/test_prompts.py -v
+```
+
+### Configuração do `.env`
+
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_API_KEY=sua_chave_langsmith
+USERNAME_LANGSMITH_HUB=seu_username
+
+GOOGLE_API_KEY=sua_chave_google
+
+LLM_PROVIDER=google
+LLM_MODEL=gemini-2.5-flash
+EVAL_MODEL=gemini-2.5-flash
+```
 
 ---
 
