@@ -60,14 +60,14 @@ def load_dataset_from_jsonl(jsonl_path: str) -> List[Dict[str, Any]]:
         return examples
 
     except FileNotFoundError:
-        print(f"[ERRO] Arquivo não encontrado: {jsonl_path}")
+        print(f"❌ Arquivo não encontrado: {jsonl_path}")
         print("\nCertifique-se de que o arquivo datasets/bug_to_user_story.jsonl existe.")
         return []
     except json.JSONDecodeError as e:
-        print(f"[ERRO] Erro ao parsear JSONL: {e}")
+        print(f"❌ Erro ao parsear JSONL: {e}")
         return []
     except Exception as e:
-        print(f"[ERRO] Erro ao carregar dataset: {e}")
+        print(f"❌ Erro ao carregar dataset: {e}")
         return []
 
 
@@ -77,10 +77,10 @@ def create_evaluation_dataset(client: Client, dataset_name: str, jsonl_path: str
     examples = load_dataset_from_jsonl(jsonl_path)
 
     if not examples:
-        print("[ERRO] Nenhum exemplo carregado do arquivo .jsonl")
+        print("❌ Nenhum exemplo carregado do arquivo .jsonl")
         return dataset_name
 
-    print(f"   [OK] Carregados {len(examples)} exemplos do arquivo {jsonl_path}")
+    print(f"   ✓ Carregados {len(examples)} exemplos do arquivo {jsonl_path}")
 
     try:
         datasets = client.list_datasets(dataset_name=dataset_name)
@@ -92,7 +92,7 @@ def create_evaluation_dataset(client: Client, dataset_name: str, jsonl_path: str
                 break
 
         if existing_dataset:
-            print(f"   [OK] Dataset '{dataset_name}' já existe, usando existente")
+            print(f"   ✓ Dataset '{dataset_name}' já existe, usando existente")
             return dataset_name
         else:
             dataset = client.create_dataset(dataset_name=dataset_name)
@@ -104,11 +104,11 @@ def create_evaluation_dataset(client: Client, dataset_name: str, jsonl_path: str
                     outputs=example["outputs"]
                 )
 
-            print(f"   [OK] Dataset criado com {len(examples)} exemplos")
+            print(f"   ✓ Dataset criado com {len(examples)} exemplos")
             return dataset_name
 
     except Exception as e:
-        print(f"   [WARN] Erro ao criar dataset: {e}")
+        print(f"   ⚠️  Erro ao criar dataset: {e}")
         return dataset_name
 
 
@@ -116,18 +116,18 @@ def pull_prompt_from_langsmith(prompt_name: str) -> ChatPromptTemplate:
     try:
         print(f"   Puxando prompt do LangSmith Hub: {prompt_name}")
         prompt = hub.pull(prompt_name)
-        print(f"   [OK] Prompt carregado com sucesso")
+        print(f"   ✓ Prompt carregado com sucesso")
         return prompt
 
     except Exception as e:
         error_msg = str(e).lower()
 
         print(f"\n{'=' * 70}")
-        print(f"ERRO: Não foi possível carregar o prompt '{prompt_name}'")
+        print(f"❌ ERRO: Não foi possível carregar o prompt '{prompt_name}'")
         print(f"{'=' * 70}\n")
 
         if "not found" in error_msg or "404" in error_msg:
-            print("[WARN] O prompt não foi encontrado no LangSmith Hub.\n")
+            print("⚠️  O prompt não foi encontrado no LangSmith Hub.\n")
             print("AÇÕES NECESSÁRIAS:")
             print("1. Verifique se você já fez push do prompt otimizado:")
             print(f"   python src/push_prompts.py")
@@ -178,7 +178,7 @@ def evaluate_prompt_on_example(
         }
 
     except Exception as e:
-        print(f"      Erro ao avaliar exemplo: {e}")
+        print(f"      ⚠️  Erro ao avaliar exemplo: {e}")
         import traceback
         print(f"      Traceback: {traceback.format_exc()}")
         return {
@@ -193,7 +193,7 @@ def evaluate_prompt(
     dataset_name: str,
     client: Client
 ) -> Dict[str, float]:
-    print(f"\nAvaliando: {prompt_name}")
+    print(f"\n🔍 Avaliando: {prompt_name}")
 
     try:
         prompt_template = pull_prompt_from_langsmith(prompt_name)
@@ -254,7 +254,7 @@ def evaluate_prompt(
         }
 
     except Exception as e:
-        print(f"   Erro na avaliação: {e}")
+        print(f"   ❌ Erro na avaliação: {e}")
         return {
             "tone_score": 0.0,
             "acceptance_criteria_score": 0.0,
@@ -277,21 +277,21 @@ def display_results(prompt_name: str, scores: Dict[str, float]) -> bool:
     average_score = sum(scores.values()) / len(scores)
 
     print("\n" + "-" * 50)
-    print(f"MEDIA GERAL: {average_score:.4f}")
+    print(f"📊 MÉDIA GERAL: {average_score:.4f}")
     print("-" * 50)
 
     all_above_threshold = all(s >= 0.9 for s in scores.values())
     passed = all_above_threshold and average_score >= 0.9
 
     if passed:
-        print(f"\nSTATUS: APROVADO - Todas as metricas >= 0.9 e media >= 0.9")
+        print(f"\n✅ STATUS: APROVADO - Todas as métricas >= 0.9 e média >= 0.9")
     else:
-        print(f"\nSTATUS: REPROVADO")
+        print(f"\n❌ STATUS: REPROVADO")
         if not all_above_threshold:
             below = [k for k, v in scores.items() if v < 0.9]
-            print(f"[WARN] Metricas abaixo de 0.9: {', '.join(below)}")
+            print(f"⚠️  Métricas abaixo de 0.9: {', '.join(below)}")
         if average_score < 0.9:
-            print(f"[WARN] Media atual: {average_score:.4f} | Necessario: 0.9000")
+            print(f"⚠️  Média atual: {average_score:.4f} | Necessário: 0.9000")
 
     return passed
 
@@ -324,7 +324,7 @@ def main():
     jsonl_path = "datasets/bug_to_user_story.jsonl"
 
     if not Path(jsonl_path).exists():
-        print(f"[ERRO] Arquivo de dataset nao encontrado: {jsonl_path}")
+        print(f"❌ Arquivo de dataset não encontrado: {jsonl_path}")
         print("\nCertifique-se de que o arquivo existe antes de continuar.")
         return 1
 
@@ -363,7 +363,7 @@ def main():
             })
 
         except Exception as e:
-            print(f"\n[ERRO] Falha ao avaliar '{prompt_name}': {e}")
+            print(f"\n❌ Falha ao avaliar '{prompt_name}': {e}")
             all_passed = False
 
             results_summary.append({
@@ -382,7 +382,7 @@ def main():
     print("=" * 50 + "\n")
 
     if evaluated_count == 0:
-        print("[WARN] Nenhum prompt foi avaliado")
+        print("⚠️  Nenhum prompt foi avaliado")
         return 1
 
     print(f"Prompts avaliados: {evaluated_count}")
@@ -390,8 +390,8 @@ def main():
     print(f"Reprovados: {sum(1 for r in results_summary if not r['passed'])}\n")
 
     if all_passed:
-        print("[OK] Todos os prompts atingiram score >= 0.9 em todas as metricas!")
-        print(f"\nConfira os resultados em:")
+        print("✅ Todos os prompts atingiram score >= 0.9 em todas as métricas!")
+        print(f"\n✓ Confira os resultados em:")
         print(f"  https://smith.langchain.com/projects/{project_name}")
         print("\nPróximos passos:")
         print("1. Documente o processo no README.md")
@@ -399,7 +399,7 @@ def main():
         print("3. Faça commit e push para o GitHub")
         return 0
     else:
-        print("[WARN] Alguns prompts nao atingiram score >= 0.9 em todas as metricas")
+        print("⚠️  Alguns prompts não atingiram score >= 0.9 em todas as métricas")
         print("\nPróximos passos:")
         print("1. Refatore os prompts com score baixo")
         print("2. Faça push novamente: python src/push_prompts.py")

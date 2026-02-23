@@ -79,10 +79,10 @@ def main():
 
             return 0
         else:
-            print("\n   [ERRO] Erro ao salvar prompt")
+            print("\n   ❌ Erro ao salvar prompt")
             return 1
     except Exception as e:
-        print(f"\n   [ERRO] Erro: {e}")
+        print(f"\n   ❌ Erro: {e}")
         import traceback
         traceback.print_exc()
         return 1

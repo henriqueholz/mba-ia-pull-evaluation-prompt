@@ -47,7 +47,7 @@ Prompt: support_bot_v2_optimized
 - Clarity: 0.95
 - Precision: 0.92
 ================================
-Status: APROVADO - Todas as metricas atingiram o minimo de 0.9
+Status: APROVADO ✓ - Todas as métricas atingiram o mínimo de 0.9
 ```
 ---
 

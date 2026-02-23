@@ -42,13 +42,13 @@ def push_prompt_to_langsmith(prompt_name: str, prompt_data: dict) -> bool:
 
         print(f"   Fazendo push do prompt: {prompt_name}")
         hub.push(prompt_name, prompt_template, new_repo_is_public=True)
-        print(f"   [OK] Prompt publicado com sucesso (publico)")
-        print(f"   [OK] Acesse em: https://smith.langchain.com/hub/{prompt_name}")
+        print(f"   ✓ Prompt publicado com sucesso (publico)")
+        print(f"   ✓ Acesse em: https://smith.langchain.com/hub/{prompt_name}")
 
         return True
 
     except Exception as e:
-        print(f"   [ERRO] Erro ao fazer push: {e}")
+        print(f"   ❌ Erro ao fazer push: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -95,7 +95,7 @@ def main():
 
     username = os.getenv("USERNAME_LANGSMITH_HUB", "")
     if not username:
-        print("[ERRO] USERNAME_LANGSMITH_HUB nao configurado no .env")
+        print("❌ USERNAME_LANGSMITH_HUB não configurado no .env")
         return 1
 
     required_vars = ["LANGSMITH_API_KEY", "USERNAME_LANGSMITH_HUB"]
@@ -107,39 +107,39 @@ def main():
 
     data = load_yaml(yaml_path)
     if not data:
-        print(f"   [ERRO] Nao foi possivel carregar {yaml_path}")
+        print(f"   ❌ Não foi possível carregar {yaml_path}")
         return 1
 
     prompt_data = data.get("bug_to_user_story_v2", {})
     if not prompt_data:
-        print("   [ERRO] Chave 'bug_to_user_story_v2' nao encontrada no YAML")
+        print("   ❌ Chave 'bug_to_user_story_v2' não encontrada no YAML")
         return 1
 
     print("\n   Validando prompt...")
     is_valid, errors = validate_prompt(prompt_data)
 
     if not is_valid:
-        print("   [ERRO] Prompt invalido:")
+        print("   ❌ Prompt inválido:")
         for error in errors:
             print(f"      - {error}")
         return 1
 
-    print("   [OK] Prompt valido")
+    print("   ✓ Prompt válido")
 
     techniques = prompt_data.get("techniques_applied", [])
-    print(f"   [OK] Tecnicas aplicadas: {', '.join(techniques)}")
+    print(f"   ✓ Técnicas aplicadas: {', '.join(techniques)}")
 
     prompt_name = f"{username}/bug_to_user_story_v2"
     success = push_prompt_to_langsmith(prompt_name, prompt_data)
 
     if success:
-        print(f"\n   [OK] Push concluido com sucesso!")
+        print(f"\n   ✅ Push concluído com sucesso!")
         print(f"\n   Próximos passos:")
         print(f"   1. Verifique no LangSmith Hub: https://smith.langchain.com/hub/{prompt_name}")
         print(f"   2. Execute a avaliação: python src/evaluate.py")
         return 0
     else:
-        print(f"\n   [ERRO] Falha no push")
+        print(f"\n   ❌ Falha no push")
         return 1
 
 
